@@ -52,9 +52,6 @@ header, footer {
     background-color: #154c79;
     color: #ffffff;
 }
-#weather-content {
-    margin-left: 5em;
-}
 #search-history {
     list-style: none;
     padding-left: 0px;
@@ -69,7 +66,7 @@ button {
     flex: 0 0 20%;
 }
 #forecast-card {
-    margin-right: 1em;
+    margin: 0 1em 1em 0;
     padding: .5em 2em 2em 2em;
     border-radius: 10px;
     background-color: #154c79;
@@ -104,4 +101,53 @@ button {
     background-color: #154c79;
     width: 100px;
     border-radius: 10px;
+}
+@media (min-width: 768px) { /* Tablets and up */
+    .flex-item-15 {
+        flex: 0 0 15%;
+    }
+    .flex-item-85 {
+        flex: 0 0 85%;
+    }
+    #weather-content {
+        margin-left: 5em;
+    }
+    #forecast-content {
+        display: flex;
+        flex-wrap: wrap; /* Allows items to wrap in smaller views */
+    }
+    .forecast-item {
+        flex: 0 0 50%; /* Allows items to grow and shrink */
+    }
+}
+
+@media (min-width: 1200px) { /* Tablets and up */
+    .flex-item-15 {
+        flex: 0 0 15%;
+    }
+    .flex-item-85 {
+        flex: 0 0 85%;
+    }
+    #weather-content {
+        margin-left: 5em;
+    }
+    #forecast-content {
+        display: flex;
+        flex-wrap: wrap; /* Allows items to wrap in smaller views */
+    }
+    .forecast-item {
+        flex: 1 1 20%; /* Allows items to grow and shrink */
+    }
+}
+
+@media (max-width: 768px) { /* Mobile devices */
+    main {
+        flex-direction: column; /* Stack the main content on smaller screens */
+    }
+    #forecast-content {
+        flex-direction: column; /* Stack forecast items on smaller screens */
+    }
+    .forecast-item {
+        margin-bottom: 1em; /* Add some space between stacked items */
+    }
 }

@@ -8,11 +8,19 @@ const DAYS_OF_WEEK = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday
 document.addEventListener("DOMContentLoaded", async function(event) {
     setFooter();
     setSearchHistory();
-    await updatePage();
+    await updateContent();
 
     document.getElementById("search").addEventListener('click', async function() {
         const locationName = document.getElementById("city-input").value;
         await searchLocation(locationName);
+    });
+
+    document.getElementById("city-input").addEventListener('keydown', async function(e) {
+        const locationName = document.getElementById("city-input").value;
+        if (e.key === "Enter" && locationName){
+            e.preventDefault();
+            await searchLocation(locationName);
+        }
     });
 
     document.getElementById("use-my-location").addEventListener('click', async function() {
@@ -20,7 +28,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
             navigator.geolocation.getCurrentPosition(async function(position) {
                 currentLat = position.coords.latitude;
                 currentLong = position.coords.longitude;
-                await updatePage();
+                await updateContent();
             }, function(error) {
                 console.error('Error occurred: ', error);
             });
@@ -48,10 +56,10 @@ async function historyClick(elem){
     currentLat = lat;
     currentLong = lon;
 
-    await updatePage();
+    await updateContent();
 }
 
-async function updatePage(){
+async function updateContent(){
     let forecast = await fetchForecast();
     setCurrentLocation(forecast);
 }
@@ -133,15 +141,18 @@ function setCurrentLocation(forecast){
 };
 
 function setForecast(forecast){
-    let day1 = forecast[3];
-    let day2 = forecast[11];
-    let day3 = forecast[19];
-    let day4 = forecast[27];
-    let day5 = forecast[35];
+    let day1 = forecast.splice(0, 7);
+    let day2 = forecast.splice(0, 7);
+    let day3 = forecast.splice(0, 7);
+    let day4 = forecast.splice(0, 7);
+    let day5 = forecast.splice(0, 7);
     let days = [day1, day2, day3, day4, day5];
 
     for (let i = 0; i < days.length; i++){
-        let day = days[i];
+        let day = days[i].reduce((prev, current) => {
+            return (prev.main.temp > current.main.temp) ? prev : current;
+        });
+
         let unixEpoch = day.dt;
         let date = new Date(unixEpoch * 1000);
         let formattedDate = getFormattedDate(date);
@@ -171,7 +182,7 @@ function setForecast(forecast){
     }
 }
 
-function getFormattedDate(date) {
+function getFormattedDate(date, includeYear) {
     let year = date.getFullYear();
   
     let month = (1 + date.getMonth()).toString();
@@ -180,5 +191,5 @@ function getFormattedDate(date) {
     let day = date.getDate().toString();
     day = day.length > 1 ? day : '0' + day;
     
-    return month + '/' + day + '/' + year;
+    return includeYear ? month + '/' + day + '/' + year : month + '/' + day;
   }
