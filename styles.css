@@ -173,10 +173,6 @@ hr {
 }
 @media (prefers-color-scheme: dark) {
     html, body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        font-family: Arial, Helvetica, sans-serif;
         background-color: black;
         color: white;
     }
