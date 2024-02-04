@@ -1,3 +1,7 @@
+// consts
+const API_KEY = "d2c8556859925903e33b931f581ce7e8";
+const DAYS_OF_WEEK = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
 if (localStorage.getItem("currentLat") === null) {
     localStorage.setItem("currentLat", 34.05);
 }
@@ -8,9 +12,7 @@ if (localStorage.getItem("searchHistory") === null) {
     localStorage.setItem("searchHistory", JSON.stringify([]));
 }
 
-const API_KEY = "d2c8556859925903e33b931f581ce7e8";
-const DAYS_OF_WEEK = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
-
+// events
 document.addEventListener("DOMContentLoaded", async function(event) {
     setFooter();
     setSearchHistory();
@@ -44,6 +46,58 @@ document.addEventListener("DOMContentLoaded", async function(event) {
     });
 });
 
+// data fetching
+async function fetchForecast(){
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${localStorage.getItem("currentLat")}&lon=${localStorage.getItem("currentLong")}&units=imperial&appid=${API_KEY}`);
+    let forecast = await response.json();
+    return forecast;
+}
+
+async function fetchCurrentWeather(){
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${localStorage.getItem("currentLat")}&lon=${localStorage.getItem("currentLong")}&units=imperial&appid=${API_KEY}`;
+    try {
+        const response = await fetch(url);
+        const weather = await response.json();
+        return weather ? weather : null;
+    }
+    catch (e){
+        console.error('Failed to fetch current weather', e);
+    }
+}
+
+async function searchLocation(locationName){
+    const url = `https://api.openweathermap.org/geo/1.0/direct?q=${locationName}&limit=5&appid=${API_KEY}`;
+
+    try {
+        clearError();
+
+        const response = await fetch(url);
+        const locations = await response.json();
+
+        if (locations.length > 0){
+            let location = locations[0];
+            localStorage.setItem("currentLat", location.lat);
+            localStorage.setItem("currentLong", location.lon);
+
+            let currentWeather = await fetchCurrentWeather();
+            let forecast = await fetchForecast();
+            let searchHistory = JSON.parse(localStorage.getItem("searchHistory"));
+            searchHistory.unshift({name: currentWeather.name, lat: location.lat, lon: location.lon});
+            localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
+            setSearchHistory();
+            
+            setCurrentWeather(currentWeather);
+            setForecast(forecast.list);
+        }
+        else {
+            showError("City not found!");
+        }
+    } catch (error) {
+        console.error('Failed to fetch location data', error);
+    }
+}
+
+// dom updates
 function setSearchHistory(){
     let $history = document.getElementById("search-history");
     let innerHtml = "";
@@ -66,63 +120,15 @@ async function historyClick(elem){
 }
 
 async function updateContent(){
+    let currentWeather = await fetchCurrentWeather();
     let forecast = await fetchForecast();
-    setCurrentLocation(forecast);
+    
+    setCurrentWeather(currentWeather);
+    setForecast(forecast.list);
 }
 
-async function searchLocation(locationName){
-    const url = `https://api.openweathermap.org/geo/1.0/direct?q=${locationName}&limit=5&appid=${API_KEY}`;
-
-    try {
-        clearError();
-
-        const response = await fetch(url);
-        const locations = await response.json();
-
-        if (locations.length > 0){
-            let location = locations[0];
-            localStorage.setItem("currentLat", location.lat);
-            localStorage.setItem("currentLong", location.lon);
-
-            let forecast = await fetchForecast();
-            let searchHistory = JSON.parse(localStorage.getItem("searchHistory"));
-            searchHistory.unshift({name: forecast.city.name, lat: location.lat, lon: location.lon});
-            localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
-            setSearchHistory();
-            
-            setCurrentLocation(forecast);
-        }
-        else {
-            showError("City not found!");
-        }
-    } catch (error) {
-        console.error('Failed to fetch location data', error);
-    }
-}
-
-function showError(message){
-    let $error = document.getElementById("error-message");
-    $error.innerText = message;
-}
-
-function clearError(){
-    let $error = document.getElementById("error-message");
-    $error.innerText = "";
-}
-
-function setFooter() {
-    document.getElementById("footer").innerHTML = `Copyright Bryce Belen ${new Date().getFullYear()}`;
-}
-
-async function fetchForecast(){
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${localStorage.getItem("currentLat")}&lon=${localStorage.getItem("currentLong")}&units=imperial&appid=${API_KEY}`);
-    let forecast = await response.json();
-    return forecast;
-}
-
-function setCurrentLocation(forecast){
-    let current = forecast.list[0];
-    let cityName = forecast.city.name;
+function setCurrentWeather(current){
+    let cityName = current.name;
     let currentDate = getFormattedDate(new Date());
     let tempNum = current.main.temp;
     let tempClass = tempNum > 80 ? "hot" : tempNum < 60 ? "cold" : "";
@@ -142,8 +148,6 @@ function setCurrentLocation(forecast){
     $temp.innerHTML = currentTemp;
     $wind.innerHTML = currentWind;
     $humidity.innerHTML = currentHumidity;
-
-    setForecast(forecast.list);
 };
 
 function setForecast(forecast){
@@ -173,7 +177,7 @@ function setForecast(forecast){
 
         let $day = document.getElementById(`day-${i+1}`);
         $day.innerHTML = `
-            <div id="forecast-card">
+            <div class="forecast-card">
                 <h4>${dayOfWeek} ${formattedDate}</h4>
                 <hr />
                 <p class="weather-description">${description}</p>
@@ -188,14 +192,29 @@ function setForecast(forecast){
     }
 }
 
+// utility functions
 function getFormattedDate(date, includeYear) {
     let year = date.getFullYear();
-  
+
     let month = (1 + date.getMonth()).toString();
     month = month.length > 1 ? month : '0' + month;
-  
+
     let day = date.getDate().toString();
     day = day.length > 1 ? day : '0' + day;
-    
+
     return includeYear ? month + '/' + day + '/' + year : month + '/' + day;
-  }
+}
+
+function showError(message){
+    let $error = document.getElementById("error-message");
+    $error.innerText = message;
+}
+
+function clearError(){
+    let $error = document.getElementById("error-message");
+    $error.innerText = "";
+}
+
+function setFooter() {
+    document.getElementById("footer").innerHTML = `Copyright Bryce Belen ${new Date().getFullYear()}`;
+}
