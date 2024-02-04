@@ -1,6 +1,12 @@
-let currentLat = 34.05;
-let currentLong = -118.24;
-let searchHistory = [];
+if (localStorage.getItem("currentLat") === null) {
+    localStorage.setItem("currentLat", 34.05);
+}
+if (localStorage.getItem("currentLong") === null) {
+    localStorage.setItem("currentLong", -118.24);
+}
+if (localStorage.getItem("searchHistory") === null) {
+    localStorage.setItem("searchHistory", JSON.stringify([]));
+}
 
 const API_KEY = "d2c8556859925903e33b931f581ce7e8";
 const DAYS_OF_WEEK = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
@@ -26,8 +32,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
     document.getElementById("use-my-location").addEventListener('click', async function() {
         if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(async function(position) {
-                currentLat = position.coords.latitude;
-                currentLong = position.coords.longitude;
+                localStorage.setItem("currentLat", position.coords.latitude);
+                localStorage.setItem("currentLong", position.coords.longitude);
                 await updateContent();
             }, function(error) {
                 console.error('Error occurred: ', error);
@@ -41,7 +47,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 function setSearchHistory(){
     let $history = document.getElementById("search-history");
     let innerHtml = "";
-
+    let searchHistory = JSON.parse(localStorage.getItem("searchHistory"));
     searchHistory.map((h, i) => {
         innerHtml += `<li class="no-decoration"><button type="button" onclick="historyClick(this)" class="history left-nav-button" data-lat=${h.lat} data-lon=${h.lon}>${h.name}</a></li>`
     });
@@ -53,8 +59,8 @@ async function historyClick(elem){
     let lat = elem.getAttribute('data-lat');
     let lon = elem.getAttribute('data-lon');
 
-    currentLat = lat;
-    currentLong = lon;
+    localStorage.setItem("currentLat", lat);
+    localStorage.setItem("currentLong", lon);
 
     await updateContent();
 }
@@ -75,13 +81,13 @@ async function searchLocation(locationName){
 
         if (locations.length > 0){
             let location = locations[0];
-            currentLat = location.lat;
-            currentLong = location.lon;
+            localStorage.setItem("currentLat", location.lat);
+            localStorage.setItem("currentLong", location.lon);
 
             let forecast = await fetchForecast();
-
+            let searchHistory = JSON.parse(localStorage.getItem("searchHistory"));
             searchHistory.unshift({name: forecast.city.name, lat: location.lat, lon: location.lon});
-
+            localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
             setSearchHistory();
             
             setCurrentLocation(forecast);
@@ -109,7 +115,7 @@ function setFooter() {
 }
 
 async function fetchForecast(){
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${currentLat}&lon=${currentLong}&units=imperial&appid=${API_KEY}`);
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${localStorage.getItem("currentLat")}&lon=${localStorage.getItem("currentLong")}&units=imperial&appid=${API_KEY}`);
     let forecast = await response.json();
     return forecast;
 }
