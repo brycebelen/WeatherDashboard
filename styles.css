@@ -97,10 +97,17 @@ button {
     float: right;
     cursor: pointer;
 }
-#city-weather-icon {
-    background-color: #154c79;
+#city-weather-icon-container {
+    display: flex;
+    width: 100%;
+}
+#city-weather-img {
     width: 100px;
+    background-color: #154c79;
     border-radius: 10px;
+}
+hr {
+    border: 1px solid lightgrey;
 }
 @media (min-width: 768px) { /* Tablets and up */
     .flex-item-15 {
@@ -111,6 +118,8 @@ button {
     }
     #weather-content {
         margin-left: 5em;
+        border-left: 2px solid lightgrey;
+        padding-left: 1em;
     }
     #forecast-content {
         display: flex;
@@ -149,5 +158,17 @@ button {
     }
     .forecast-item {
         margin-bottom: 1em; /* Add some space between stacked items */
+    }
+    #city-summary {
+        text-align: center;
+    }
+    #city-weather-icon-container {
+        justify-content: center;
+    }
+    .search-button, .history {
+        padding: 2em;
+    }
+    h2 {
+        text-align: center;
     }
 }

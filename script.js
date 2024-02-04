@@ -126,13 +126,13 @@ function setCurrentLocation(forecast){
     let icon = current.weather[0].icon;
 
     let $cityName = document.getElementById("city-name");
-    let $cityWeatherIcon = document.getElementById("city-weather-icon");
+    let $cityWeatherIcon = document.getElementById("city-weather-icon-container");
     let $temp = document.getElementById("city-temp");
     let $wind = document.getElementById("city-wind");
     let $humidity = document.getElementById("city-humidity");
 
     $cityName.innerHTML = `${cityName} (${currentDate})`;
-    $cityWeatherIcon.innerHTML = `<img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="weather icon" />`
+    $cityWeatherIcon.innerHTML = `<img id="city-weather-img" src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="weather icon" />`
     $temp.innerHTML = currentTemp;
     $wind.innerHTML = currentWind;
     $humidity.innerHTML = currentHumidity;
